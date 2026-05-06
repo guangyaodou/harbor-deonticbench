@@ -133,13 +133,17 @@ def _download_data(repo_dir: Path) -> None:
     """Download and extract DA-Code dataset files from Google Drive."""
 
     # 1. Download source.zip
-    logger.info("Downloading source.zip from Google Drive...")
     source_zip = repo_dir / "source.zip"
-    gdown.download(
-        "https://drive.google.com/uc?id=1eM_FVT1tlY4XXp6b7TrKzgTWOvskrjTs",
-        str(source_zip),
-        quiet=False,
-    )
+    if source_zip.exists():
+        logger.info("source.zip already present, skipping download.")
+    else:
+        logger.info("Downloading source.zip from Google Drive...")
+        gdown.download(
+            "https://drive.google.com/uc?id=1eM_FVT1tlY4XXp6b7TrKzgTWOvskrjTs",
+            str(source_zip),
+            quiet=False,
+            resume=True,
+        )
 
     # 2. Remove old source directory if it exists
     source_dir = repo_dir / "da_code" / "source"
@@ -153,13 +157,17 @@ def _download_data(repo_dir: Path) -> None:
         zip_ref.extractall(repo_dir / "da_code")
 
     # 4. Download gold.zip
-    logger.info("Downloading gold.zip from Google Drive...")
     gold_zip = repo_dir / "gold.zip"
-    gdown.download(
-        "https://drive.google.com/uc?id=1WxcrijbCgdHzFSSSt2HVlkJqQrBWQ2IL",
-        str(gold_zip),
-        quiet=False,
-    )
+    if gold_zip.exists():
+        logger.info("gold.zip already present, skipping download.")
+    else:
+        logger.info("Downloading gold.zip from Google Drive...")
+        gdown.download(
+            "https://drive.google.com/uc?id=1WxcrijbCgdHzFSSSt2HVlkJqQrBWQ2IL",
+            str(gold_zip),
+            quiet=False,
+            resume=True,
+        )
 
     # 5. Remove old gold directory if it exists
     gold_dir = repo_dir / "da_code" / "gold"
@@ -334,6 +342,7 @@ def main() -> None:
             logger.error(f"Specified repository path does not exist: {benchmark_root}")
             sys.exit(1)
         try:
+            _download_data(benchmark_root)
             _process_benchmark(benchmark_root, output_dir, all_ids, args.limit)
         except Exception as e:
             logger.error(

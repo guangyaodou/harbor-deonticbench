@@ -599,7 +599,25 @@ class Codex(BaseInstalledAgent):
                 lines.append(f'url = "{server.url}"')
             lines.append("")
         escaped_config = shlex.quote("\n".join(lines))
-        return f'echo {escaped_config} > "$CODEX_HOME/config.toml"'
+        return f'echo {escaped_config} >> "$CODEX_HOME/config.toml"'
+
+    def _build_vllm_config_command(self, base_url: str) -> str:
+        """Return a shell command that writes a vLLM provider config to $CODEX_HOME/config.toml."""
+        config_lines = [
+            f'model = "{self.model_name}"',
+            'model_provider = "vllm"',
+            "",
+            "[model_providers.vllm]",
+            'name = "vLLM"',
+            'env_key = "VLLM_API_KEY"',
+            f'base_url = "{base_url}"',
+            'wire_api = "responses"',
+            "",
+        ]
+        escaped = shlex.quote("\n".join(config_lines))
+        return (
+            f'mkdir -p "$CODEX_HOME" && printf %s {escaped} > "$CODEX_HOME/config.toml"'
+        )
 
     def _resolve_auth_json_path(self) -> Path | None:
         """Resolve which auth.json to inject, if any.
@@ -643,17 +661,28 @@ class Codex(BaseInstalledAgent):
         cli_flags = self.build_cli_flags()
         cli_flags_arg = (cli_flags + " ") if cli_flags else ""
 
+        openai_base_url = self._get_env("OPENAI_BASE_URL")
+        is_vllm = bool(openai_base_url)
+
         # Auth resolution:
+        #   vLLM mode (OPENAI_BASE_URL set): use config.toml provider block + VLLM_API_KEY
         #   1. CODEX_FORCE_API_KEY=1 → always use OPENAI_API_KEY, skip auth.json
         #   2. CODEX_AUTH_JSON_PATH=<path> → use that specific auth.json file
         #   3. Default: use ~/.codex/auth.json if it exists, else OPENAI_API_KEY
-        auth_json_path = self._resolve_auth_json_path()
+        auth_json_path = None if is_vllm else self._resolve_auth_json_path()
 
         env: dict[str, str] = {
             "CODEX_HOME": EnvironmentPaths.agent_dir.as_posix(),
         }
 
-        if auth_json_path:
+        if is_vllm:
+            self.logger.debug("Codex auth: vLLM mode, using VLLM_API_KEY")
+            env["VLLM_API_KEY"] = (
+                self._get_env("VLLM_API_KEY")
+                or self._get_env("OPENAI_API_KEY")
+                or "dummy"
+            )
+        elif auth_json_path:
             self.logger.debug("Codex auth: using auth.json from %s", auth_json_path)
             auth_target = (EnvironmentPaths.agent_dir / "auth.json").as_posix()
             await environment.upload_file(auth_json_path, auth_target)
@@ -667,11 +696,11 @@ class Codex(BaseInstalledAgent):
             self.logger.debug("Codex auth: using OPENAI_API_KEY")
             env["OPENAI_API_KEY"] = self._get_env("OPENAI_API_KEY") or ""
 
-        if openai_base_url := self._get_env("OPENAI_BASE_URL"):
-            env["OPENAI_BASE_URL"] = openai_base_url
-
         setup_command = ""
-        if not auth_json_path:
+        if is_vllm:
+            # Write vLLM provider config; MCP block (if any) appends after
+            setup_command += self._build_vllm_config_command(openai_base_url or "") + "\n"
+        elif not auth_json_path:
             # Write a synthetic auth.json for API key auth
             setup_command += (
                 "mkdir -p /tmp/codex-secrets\n"
@@ -702,7 +731,7 @@ class Codex(BaseInstalledAgent):
                     "codex exec "
                     "--dangerously-bypass-approvals-and-sandbox "
                     "--skip-git-repo-check "
-                    f"--model {model} "
+                    f"--model {self.model_name if is_vllm else model} "
                     "--json "
                     "--enable unified_exec "
                     f"{cli_flags_arg}"

@@ -208,7 +208,10 @@ __marimo__/
 
 
 jobs/
+jobs_dacode/
 trials/
+results-*.csv
+test_swipl.txt
 *.ipynb
 /tasks/
 /datasets/

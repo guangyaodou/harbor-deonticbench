@@ -1,0 +1,9 @@
+[project]
+name = "deonticbench-fewshot"
+version = "0.1.0"
+description = "Dependencies for deonticbench_fewshot run_adapter.py"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "jinja2>=3.1.6",
+]

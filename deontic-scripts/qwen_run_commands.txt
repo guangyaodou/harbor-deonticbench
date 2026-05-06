@@ -1,0 +1,28 @@
+## DeonticBench Run Commands
+
+# Direct
+harbor run \
+  --path datasets/deonticbench-direct \
+  --agent terminus-2 \
+  --model together_ai/Qwen/Qwen3-235B-A22B-Instruct-2507-tput \
+  --ae TOGETHER_API_KEY=$TOGETHER_API_KEY \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct
+
+# Zero-shot
+harbor run \
+  --path datasets/deonticbench-zeroshot \
+  --agent terminus-2 \
+  --model together_ai/Qwen/Qwen3-235B-A22B-Instruct-2507-tput \
+  --ae TOGETHER_API_KEY=$TOGETHER_API_KEY \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-zeroshot
+
+# Few-shot
+harbor run \
+  --path datasets/deonticbench-fewshot \
+  --agent terminus-2 \
+  --model together_ai/Qwen/Qwen3-235B-A22B-Instruct-2507-tput \
+  --ae TOGETHER_API_KEY=$TOGETHER_API_KEY \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-fewshot

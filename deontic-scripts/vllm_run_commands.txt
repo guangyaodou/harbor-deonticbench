@@ -1,0 +1,91 @@
+## DeonticBench Run Commands - vLLM (self-hosted via DSAI tunnel)
+##
+## Prerequisites:
+##   1. Start vLLM on DSAI via SLURM: MAX_TOKENS=32768 MODEL=Qwen/Qwen3-Coder-Next sbatch experiments/start_vllm_server.sh
+##   2. Note the compute node from the job log (e.g. "From another node, use: http://devbvandur1:9009/v1")
+##   3. Start the tunnel: bash deontic-scripts/vllm_tunnel.sh devbvandur1
+##   4. Verify: curl -sf http://localhost:9009/v1/models -H 'Authorization: Bearer token-abc123' | python3 -c "import sys,json; [print(' ', m['id']) for m in json.load(sys.stdin)['data']]"
+##
+## NOTE: Harbor agents run inside Docker containers — use 172.17.0.1 (Docker bridge gateway)
+##       instead of localhost. Containers cannot reach the host SSH tunnel via localhost.
+## NOTE: Use --ak api_base=... for the endpoint and --ak llm_kwargs='{"api_key": "..."}' for
+##       the key. The host OPENAI_API_KEY (real OpenAI key) overrides --ae, so api_key must be
+##       passed via llm_kwargs to reach LiteLLM's completion call directly.
+##
+## Model: Qwen/Qwen3-Coder-Next  API key: token-abc123  max_model_len: 32768
+
+# Direct
+harbor run \
+  --path datasets/deonticbench-direct \
+  --agent terminus-2 \
+  --model openai/Qwen/Qwen3-Coder-Next \
+  --ak api_base=http://172.17.0.1:9009/v1 \
+  --ak llm_kwargs='{"api_key": "token-abc123"}' \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct
+
+uv run harbor run \
+  --path datasets/deonticbench-cc-direct \
+  --agent claude-code \
+  --model Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 \
+  --ae ANTHROPIC_BASE_URL=http://172.17.0.1:9009 \
+  --ae ANTHROPIC_API_KEY=token-abc123 \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct
+
+uv run harbor run \
+  --path datasets/deonticbench-direct \
+  --agent codex \
+  --model Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 \
+  --ae OPENAI_BASE_URL=http://172.17.0.1:9009/v1 \
+  --ae OPENAI_API_KEY=token-abc123 \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct
+
+uv run harbor run \
+  --path datasets/deonticbench-cc-zeroshot \
+  --agent claude-code \
+  --model Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 \
+  --ae ANTHROPIC_BASE_URL=http://172.17.0.1:9009 \
+  --ae ANTHROPIC_API_KEY=token-abc123 \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-zeroshot-test-cc
+
+uv run harbor run \
+  --path datasets/deonticbench-zeroshot \
+  --agent codex \
+  --model Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 \
+  --ae OPENAI_BASE_URL=http://172.17.0.1:9009/v1 \
+  --ae OPENAI_API_KEY=token-abc123 \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-zeroshot
+
+harbor run \
+  --path datasets/deonticbench-zeroshot \
+  --agent terminus-2 \
+  --model openai/Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 \
+  --ak api_base=http://172.17.0.1:9009/v1 \
+  --ak llm_kwargs='{"api_key": "token-abc123"}' \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-zeroshot
+
+
+# Zero-shot
+harbor run \
+  --path datasets/deonticbench-zeroshot \
+  --agent terminus-2 \
+  --model openai/Qwen/Qwen3-Coder-Next \
+  --ak api_base=http://172.17.0.1:9009/v1 \
+  --ak llm_kwargs='{"api_key": "token-abc123"}' \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-zeroshot
+
+# Few-shot
+harbor run \
+  --path datasets/deonticbench-fewshot \
+  --agent terminus-2 \
+  --model openai/Qwen/Qwen3-Coder-Next \
+  --ak api_base=http://172.17.0.1:9009/v1 \
+  --ak llm_kwargs='{"api_key": "token-abc123"}' \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-fewshot

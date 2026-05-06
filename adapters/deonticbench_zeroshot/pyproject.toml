@@ -1,0 +1,9 @@
+[project]
+name = "deonticbench-zeroshot"
+version = "0.1.0"
+description = "Dependencies for deonticbench_zeroshot run_adapter.py"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "jinja2>=3.1.6",
+]

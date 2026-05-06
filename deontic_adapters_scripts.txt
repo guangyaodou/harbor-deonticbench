@@ -1,0 +1,201 @@
+# DeonticBench Harbor — adapter generation + evaluation commands
+# Run all commands from the harbor root directory.
+# Each adapter generates 173 tasks: sara_numeric(35) + sara_binary(30) + airline(80) + uscis-aao(28)
+
+DEONTICBENCH_ROOT=/home/blab-029b/Desktop/workspace/gdou1/DeonticBench
+
+# ==============================================================================
+# STEP 1: Generate tasks
+# ==============================================================================
+
+export DEONTICBENCH_ROOT=/home/blab-029b/Desktop/workspace/gdou1/DeonticBench   
+
+# Direct mode (free-form answer → /app/output/answer.txt)
+cd adapters/deonticbench_direct
+uv run python run_adapter.py \
+    --deonticbench-root $DEONTICBENCH_ROOT \
+    --output-dir ../../datasets/deonticbench-direct
+
+# Zero-shot Prolog mode (agent writes /app/solution.pl, no examples)
+cd ../deonticbench_zeroshot
+uv run python run_adapter.py \
+    --deonticbench-root $DEONTICBENCH_ROOT \
+    --output-dir ../../datasets/deonticbench-zeroshot
+
+# Few-shot Prolog mode (agent writes /app/solution.pl, examples at /app/examples.txt)
+cd ../deonticbench_fewshot
+uv run python run_adapter.py \
+    --deonticbench-root $DEONTICBENCH_ROOT \
+    --output-dir ../../datasets/deonticbench-fewshot
+
+cd ../..
+
+# Optional flags for run_adapter.py:
+#   --subdomains sara_numeric sara_binary airline uscis-aao   filter to specific subdomains
+#   --limit N                                                  generate only first N tasks
+#   --clean                                                    delete output dir before generating
+#   --task-ids sara_numeric/tax_case_10 ...                   generate specific task IDs
+
+
+# ==============================================================================
+# STEP 2: Run evaluations with Harbor (terminus-2 agent)
+# ==============================================================================
+# Model name format for LiteLLM:
+#   OpenRouter:  openrouter/<provider>/<model>
+#   Together AI: together_ai/<provider>/<model>
+
+# --- Direct mode ---
+
+# OpenRouter — kimi-k2
+harbor run \
+    --path datasets/deonticbench-direct \
+    --agent terminus-2 \
+    --model openrouter/moonshotai/kimi-k2-0905 \
+    --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+    --n-concurrent 4
+
+# OpenRouter — claude-sonnet-4.5
+harbor run \
+    --path datasets/deonticbench-direct \
+    --agent terminus-2 \
+    --model openrouter/anthropic/claude-sonnet-4.5 \
+    --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+    --n-concurrent 4
+
+# OpenRouter — gemini-2.5-flash
+harbor run \
+    --path datasets/deonticbench-direct \
+    --agent terminus-2 \
+    --model openrouter/google/gemini-2.5-flash \
+    --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+    --n-concurrent 4
+
+# Together AI — Qwen3-235B
+harbor run \
+    --path datasets/deonticbench-direct \
+    --agent terminus-2 \
+    --model together_ai/Qwen/Qwen3-235B-A22B-Instruct-2507-tput \
+    --ae TOGETHER_API_KEY=$TOGETHER_API_KEY \
+    --n-concurrent 4
+
+# Together AI — Qwen3-Coder-480B
+harbor run \
+    --path datasets/deonticbench-direct \
+    --agent terminus-2 \
+    --model together_ai/Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 \
+    --ae TOGETHER_API_KEY=$TOGETHER_API_KEY \
+    --n-concurrent 4
+
+# Together AI — Qwen3-Coder-Next
+harbor run \
+    --path datasets/deonticbench-direct \
+    --agent terminus-2 \
+    --model together_ai/Qwen/Qwen3-Coder-Next-FP8 \
+    --ae TOGETHER_API_KEY=$TOGETHER_API_KEY \
+    --n-concurrent 4
+
+# --- Zero-shot Prolog mode ---
+
+# OpenRouter — kimi-k2
+harbor run \
+    --path datasets/deonticbench-zeroshot \
+    --agent terminus-2 \
+    --model openrouter/moonshotai/kimi-k2-0905 \
+    --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+    --n-concurrent 4
+
+# OpenRouter — claude-sonnet-4.5
+harbor run \
+    --path datasets/deonticbench-zeroshot \
+    --agent terminus-2 \
+    --model openrouter/anthropic/claude-sonnet-4.5 \
+    --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+    --n-concurrent 4
+
+# OpenRouter — gemini-2.5-flash
+harbor run \
+    --path datasets/deonticbench-zeroshot \
+    --agent terminus-2 \
+    --model openrouter/google/gemini-2.5-flash \
+    --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+    --n-concurrent 4
+
+# Together AI — Qwen3-235B
+harbor run \
+    --path datasets/deonticbench-zeroshot \
+    --agent terminus-2 \
+    --model together_ai/Qwen/Qwen3-235B-A22B-Instruct-2507-tput \
+    --ae TOGETHER_API_KEY=$TOGETHER_API_KEY \
+    --n-concurrent 4
+
+# Together AI — Qwen3-Coder-480B
+harbor run \
+    --path datasets/deonticbench-zeroshot \
+    --agent terminus-2 \
+    --model together_ai/Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 \
+    --ae TOGETHER_API_KEY=$TOGETHER_API_KEY \
+    --n-concurrent 4
+
+# Together AI — Qwen3-Coder-Next
+harbor run \
+    --path datasets/deonticbench-zeroshot \
+    --agent terminus-2 \
+    --model together_ai/Qwen/Qwen3-Coder-Next-FP8 \
+    --ae TOGETHER_API_KEY=$TOGETHER_API_KEY \
+    --n-concurrent 4
+
+# --- Few-shot Prolog mode ---
+
+# OpenRouter — kimi-k2
+harbor run \
+    --path datasets/deonticbench-fewshot \
+    --agent terminus-2 \
+    --model openrouter/moonshotai/kimi-k2-0905 \
+    --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+    --n-concurrent 4
+
+# OpenRouter — claude-sonnet-4.5
+harbor run \
+    --path datasets/deonticbench-fewshot \
+    --agent terminus-2 \
+    --model openrouter/anthropic/claude-sonnet-4.5 \
+    --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+    --n-concurrent 4
+
+# OpenRouter — gemini-2.5-flash
+harbor run \
+    --path datasets/deonticbench-fewshot \
+    --agent terminus-2 \
+    --model openrouter/google/gemini-2.5-flash \
+    --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+    --n-concurrent 4
+
+# Together AI — Qwen3-235B
+harbor run \
+    --path datasets/deonticbench-fewshot \
+    --agent terminus-2 \
+    --model together_ai/Qwen/Qwen3-235B-A22B-Instruct-2507-tput \
+    --ae TOGETHER_API_KEY=$TOGETHER_API_KEY \
+    --n-concurrent 4
+
+# Together AI — Qwen3-Coder-480B
+harbor run \
+    --path datasets/deonticbench-fewshot \
+    --agent terminus-2 \
+    --model together_ai/Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8 \
+    --ae TOGETHER_API_KEY=$TOGETHER_API_KEY \
+    --n-concurrent 4
+
+# Together AI — Qwen3-Coder-Next
+harbor run \
+    --path datasets/deonticbench-fewshot \
+    --agent terminus-2 \
+    --model together_ai/Qwen/Qwen3-Coder-Next-FP8 \
+    --ae TOGETHER_API_KEY=$TOGETHER_API_KEY \
+    --n-concurrent 4
+
+# Other useful harbor run flags:
+#   --n-tasks N                    run only first N tasks
+#   --include-task-name "airline*" filter by task name glob
+#   --n-concurrent N               parallel trials (default 4)
+#   --n-attempts N                 retries per task
