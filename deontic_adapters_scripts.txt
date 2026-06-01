@@ -2,13 +2,13 @@
 # Run all commands from the harbor root directory.
 # Each adapter generates 173 tasks: sara_numeric(35) + sara_binary(30) + airline(80) + uscis-aao(28)
 
-DEONTICBENCH_ROOT=/home/blab-029b/Desktop/workspace/gdou1/DeonticBench
+DEONTICBENCH_ROOT=/path/to/DeonticBench
 
 # ==============================================================================
 # STEP 1: Generate tasks
 # ==============================================================================
 
-export DEONTICBENCH_ROOT=/home/blab-029b/Desktop/workspace/gdou1/DeonticBench   
+export DEONTICBENCH_ROOT=/path/to/DeonticBench
 
 # Direct mode (free-form answer → /app/output/answer.txt)
 cd adapters/deonticbench_direct

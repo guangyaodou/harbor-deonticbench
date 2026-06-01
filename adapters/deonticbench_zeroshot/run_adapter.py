@@ -19,7 +19,7 @@ if str(REPO_ROOT) not in sys.path:
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-DEFAULT_DEONTICBENCH_ROOT = Path.home() / "Desktop/workspace/gdou1/DeonticBench"
+DEFAULT_DEONTICBENCH_ROOT = Path.home() / "DeonticBench"
 
 
 def _default_output_dir() -> Path:

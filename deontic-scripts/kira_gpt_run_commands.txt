@@ -1,0 +1,127 @@
+## DeonticBench Run Commands - GPT Models via Meta-Harness (baseline_kira)
+##
+## IMPORTANT: cd into terminal_bench_2 before running any command (from the harbor repo root):
+##   cd meta-harness/reference_examples/terminal_bench_2
+##
+## --path uses relative paths back to the harbor datasets dir (../../../datasets/...).
+## This works because meta-harness is a submodule three levels deep under the harbor repo root.
+##
+## Agent: agents.baseline_kira:AgentHarness (Terminus2 subclass with native tool calling)
+##
+## Reasoning effort can be customized via --ak reasoning_effort=<level>
+## Valid levels: none, minimal, low, medium, high, default
+## Applied to reasoning models: gpt-5.1, gpt-5.2, o3
+
+# ── gpt-5.1-2025-11-13 (reasoning, effort=medium) ────────────────────────────
+
+uv run harbor run \
+  --agent-import-path agents.kira_compute_then_answer:AgentHarness \
+  --path ../../../datasets/deonticbench-direct \
+  -m openai/gpt-5.1-2025-11-13 \
+  --ae OPENAI_API_KEY=$OPENAI_API_KEY \
+  --ak reasoning_effort=medium \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct-compute-then-answer
+
+uv run harbor run \
+  --agent-import-path agents.kira_deontic_grounded:AgentHarness \
+  --path ../../../datasets/deonticbench-direct \
+  -m openai/gpt-5.1-2025-11-13 \
+  --ae OPENAI_API_KEY=$OPENAI_API_KEY \
+  --ak reasoning_effort=medium \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct-deontic-grounded
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-direct-no-airline \
+  -m openai/gpt-5.2-2025-12-11 \
+  --ae OPENAI_API_KEY=$OPENAI_API_KEY \
+  --ak reasoning_effort=none \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-zeroshot \
+  -m openai/gpt-5.1-2025-11-13 \
+  --ae OPENAI_API_KEY=$OPENAI_API_KEY \
+  --ak reasoning_effort=medium \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-zeroshot
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-fewshot \
+  -m openai/gpt-5.1-2025-11-13 \
+  --ae OPENAI_API_KEY=$OPENAI_API_KEY \
+  --ak reasoning_effort=medium \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-fewshot
+
+# ── gpt-5.2-2025-12-11 (reasoning, effort=medium) ────────────────────────────
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-direct \
+  -m openai/gpt-5.2-2025-12-11 \
+  --ae OPENAI_API_KEY=$OPENAI_API_KEY \
+  --ak reasoning_effort=none \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-direct-airline-only \
+  -m openai/gpt-5.2-2025-12-11 \
+  --ae OPENAI_API_KEY=$OPENAI_API_KEY \
+  --ak reasoning_effort=none \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct-airline-only
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-zeroshot \
+  -m openai/gpt-5.2-2025-12-11 \
+  --ae OPENAI_API_KEY=$OPENAI_API_KEY \
+  --ak reasoning_effort=none \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-zeroshot
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-fewshot \
+  -m openai/gpt-5.2-2025-12-11 \
+  --ae OPENAI_API_KEY=$OPENAI_API_KEY \
+  --ak reasoning_effort=medium \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-fewshot
+
+# ── o3-2025-04-16 (reasoning, effort=medium) ──────────────────────────────────
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-direct \
+  -m openai/o3-2025-04-16 \
+  --ae OPENAI_API_KEY=$OPENAI_API_KEY \
+  --ak reasoning_effort=medium \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-zeroshot \
+  -m openai/o3-2025-04-16 \
+  --ae OPENAI_API_KEY=$OPENAI_API_KEY \
+  --ak reasoning_effort=medium \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-zeroshot
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-fewshot \
+  -m openai/o3-2025-04-16 \
+  --ae OPENAI_API_KEY=$OPENAI_API_KEY \
+  --ak reasoning_effort=medium \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-fewshot

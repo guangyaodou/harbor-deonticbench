@@ -1,0 +1,31 @@
+## DeonticBench Run Commands - OpenRouter (qwen/qwen3-235b-a22b-2507)
+##
+## Prerequisite:
+##   export OPENROUTER_API_KEY=<your-key>
+
+# ── terminus-2 ───────────────────────────────────────────────────────────────
+# LiteLLM handles the "openrouter/" provider prefix; no api_base override needed.
+
+harbor run \
+  --path datasets/deonticbench-direct \
+  --agent terminus-2 \
+  --model openrouter/qwen/qwen3-235b-a22b-2507 \
+  --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct \
+  --timeout-multiplier 1.2
+
+
+# ── codex ────────────────────────────────────────────────────────────────────
+# OPENAI_BASE_URL routes codex to OpenRouter; model name has no "openrouter/" prefix.
+# reasoning_effort=none because qwen isn't an OpenAI o-series model.
+
+harbor run \
+  --path datasets/deonticbench-direct \
+  --agent codex \
+  --model qwen/qwen3-235b-a22b-2507 \
+  --ae OPENAI_API_KEY=$OPENROUTER_API_KEY \
+  --ae OPENAI_BASE_URL=https://openrouter.ai/api/v1 \
+  --ak reasoning_effort=none \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct

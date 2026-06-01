@@ -1,0 +1,97 @@
+## DeonticBench Run Commands - OpenRouter Models via Meta-Harness
+##
+## IMPORTANT: cd into terminal_bench_2 before running any command (from the harbor repo root):
+##   cd meta-harness/reference_examples/terminal_bench_2
+##
+## --path uses relative paths back to the harbor datasets dir (../../../datasets/...).
+## This works because meta-harness is a submodule three levels deep under the harbor repo root.
+##
+## Prerequisites:
+##   export OPENROUTER_API_KEY=<your-key>
+##
+## Uses LiteLLM's native "openrouter/" provider prefix, which reads OPENROUTER_API_KEY
+## from the local environment (same as how terminus-2 works in harbor's openrouter scripts).
+## No OPENAI_BASE_URL needed — --ae only sets env vars in the remote container, not locally.
+
+# ── qwen/qwen3.5-122b-a10b  [baseline_kira] ──────────────────────────────────
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-direct \
+  -m openrouter/qwen/qwen3-235b-a22b-2507 \
+  --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct \
+  --timeout-multiplier 1.2
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-direct \
+  -m openrouter/moonshotai/kimi-k2-0905 \
+  --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct \
+  --timeout-multiplier 1.2
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-direct \
+  -m openrouter/anthropic/claude-sonnet-4.5 \
+  --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct \
+  --timeout-multiplier 1.2
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-direct \
+  -m openrouter/anthropic/claude-sonnet-4.5 \
+  --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct \
+  --timeout-multiplier 1.0
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-direct-airline-only \
+  -m openrouter/anthropic/claude-sonnet-4.5 \
+  --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct-airline-only \
+  --timeout-multiplier 1.2
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-zeroshot \
+  -m openrouter/qwen/qwen3.5-122b-a10b \
+  --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-zeroshot
+
+uv run harbor run \
+  --agent-import-path agents.baseline_kira:AgentHarness \
+  --path ../../../datasets/deonticbench-fewshot \
+  -m openrouter/qwen/qwen3.5-122b-a10b \
+  --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-fewshot
+
+# ── qwen/qwen3.5-122b-a10b  [kira_compute_then_answer] ───────────────────────
+
+uv run harbor run \
+  --agent-import-path agents.kira_compute_then_answer:AgentHarness \
+  --path ../../../datasets/deonticbench-direct \
+  -m openrouter/qwen/qwen3.5-122b-a10b \
+  --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct-compute-then-answer
+
+# ── qwen/qwen3.5-122b-a10b  [kira_deontic_grounded] ──────────────────────────
+
+uv run harbor run \
+  --agent-import-path agents.kira_deontic_grounded:AgentHarness \
+  --path ../../../datasets/deonticbench-direct \
+  -m openrouter/qwen/qwen3.5-122b-a10b \
+  --ae OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
+  --n-concurrent 2 \
+  --jobs-dir jobs/deontic-direct-deontic-grounded

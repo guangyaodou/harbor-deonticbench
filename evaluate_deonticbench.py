@@ -12,8 +12,10 @@ Usage:
   python evaluate_deonticbench.py                                  # all under jobs/
   python evaluate_deonticbench.py jobs/deontic-direct
   python evaluate_deonticbench.py jobs/deontic-direct jobs/deontic-zeroshot
-  python evaluate_deonticbench.py jobs/deontic-direct --output results.csv
+  python evaluate_deonticbench.py jobs/deontic-direct --output results-direct.csv
   python evaluate_deonticbench.py jobs/deontic-direct --verbose
+  python evaluate_deonticbench.py jobs/deontic-direct jobs/deontic-direct-airline --output results-direct.csv
+  python evaluate_deonticbench.py jobs/deontic-direct --errors-as-incorrect --output results-direct-strict.csv
 """
 
 from __future__ import annotations
@@ -111,10 +113,10 @@ UsageEntry = dict  # n_input_tokens, n_output_tokens, n_cache_tokens, cost_usd, 
 
 def collect(
     job_dirs: list[Path], verbose: bool = False
-) -> tuple[dict[str, dict[str, list[tuple[str, str]]]], dict[str, list[UsageEntry]]]:
+) -> tuple[dict[str, dict[str, list[tuple[str, str, bool]]]], dict[str, list[UsageEntry]]]:
     """Return (records, usage).
 
-    records[model][subdomain] = list of (expected, got)
+    records[model][subdomain] = list of (expected, got, is_error)
     usage[model] = list of per-trial token/cost dicts
 
     When a model appears in multiple run dirs under the same parent,
@@ -153,11 +155,13 @@ def collect(
                 }
 
                 if not stdout_path.exists():
+                    usage["missing_stdout"] = True
                     raw[(job_dir, model, run_dir)].append((sd, "", "", usage))
                     continue
 
                 expected, got = _parse_verifier_stdout(stdout_path)
                 usage["parse_failure"] = bool(got == "" and not ei)
+                usage["missing_stdout"] = False
                 raw[(job_dir, model, run_dir)].append((sd, expected, got, usage))
 
                 if verbose:
@@ -189,27 +193,53 @@ def collect(
         print()
 
     # Build final records using only latest runs
-    records: dict[str, dict[str, list[tuple[str, str]]]] = defaultdict(lambda: defaultdict(list))
+    records: dict[str, dict[str, list[tuple[str, str, bool]]]] = defaultdict(lambda: defaultdict(list))
     usage_by_model: dict[str, list[UsageEntry]] = defaultdict(list)
     for (parent, model, run_dir), trials in raw.items():
         if run_dir != latest_run[(parent, model)]:
             continue
         for sd, expected, got, usage in trials:
-            records[model][sd].append((expected, got))
+            is_error = bool(
+                usage.get("exception_type")
+                or usage.get("parse_failure")
+                or usage.get("missing_stdout")
+            )
+            records[model][sd].append((expected, got, is_error))
             usage_by_model[model].append(usage)
 
     return records, usage_by_model
 
 
-def _compute_row(model: str, sd: str, recs: list[tuple[str, str]]) -> dict:
+def _compute_row(
+    model: str, sd: str, recs: list[tuple[str, str, bool]], strict: bool = False
+) -> dict:
     n = len(recs)
-    correct = sum(1 for exp, got in recs if exp == got)
+    if strict:
+        # Errored trials are never correct, regardless of (expected, got).
+        correct = sum(1 for exp, got, err in recs if not err and exp == got)
+    else:
+        correct = sum(1 for exp, got, _err in recs if exp == got)
+
     if sd in ACCURACY_DATASETS:
         score = correct / n if n else 0.0
         metric = "Accuracy"
         details = f"{correct}/{n} correct"
     else:
-        f1_data = _macro_f1(recs)
+        if strict:
+            # For F1: errored trials with a known expected become FN for the true
+            # class (got replaced with a sentinel). Errored trials with no
+            # recoverable expected are dropped from F1 (still surfaced via the
+            # error columns in the CSV).
+            f1_recs: list[tuple[str, str]] = []
+            for exp, got, err in recs:
+                if err:
+                    if exp:
+                        f1_recs.append((exp, "__ERROR__"))
+                else:
+                    f1_recs.append((exp, got))
+        else:
+            f1_recs = [(exp, got) for exp, got, _err in recs]
+        f1_data = _macro_f1(f1_recs)
         score = f1_data["macro_f1"]
         metric = "Macro-F1"
         details = "  ".join(
@@ -220,7 +250,13 @@ def _compute_row(model: str, sd: str, recs: list[tuple[str, str]]) -> dict:
             "correct": correct, "details": details}
 
 
-def print_table(records: dict[str, dict[str, list[tuple[str, str]]]], usage_by_model: dict[str, list[UsageEntry]] | None = None) -> None:
+def print_table(
+    records: dict[str, dict[str, list[tuple[str, str, bool]]]],
+    usage_by_model: dict[str, list[UsageEntry]] | None = None,
+    strict: bool = False,
+) -> None:
+    if strict:
+        print("\n(strict scoring: errored trials counted as incorrect)")
     for model in sorted(records):
         print(f"\nModel: {model}")
         print(f"  {'Dataset':<15} {'Metric':<10} {'Score':>8}  {'N':>5}  Details")
@@ -229,7 +265,7 @@ def print_table(records: dict[str, dict[str, list[tuple[str, str]]]], usage_by_m
         for sd in ORDERED_DATASETS:
             if sd not in records[model]:
                 continue
-            row = _compute_row(model, sd, records[model][sd])
+            row = _compute_row(model, sd, records[model][sd], strict=strict)
             total_correct += row["correct"]
             total_n += row["n"]
             print(f"  {row['dataset']:<15} {row['metric']:<10} {row['score']:>8.3f}  {row['n']:>5}  {row['details']}")
@@ -251,9 +287,10 @@ ERROR_TYPES = ("RuntimeError", "AgentTimeoutError", "RewardFileNotFoundError", "
 
 
 def write_csv(
-    records: dict[str, dict[str, list[tuple[str, str]]]],
+    records: dict[str, dict[str, list[tuple[str, str, bool]]]],
     usage_by_model: dict[str, list[UsageEntry]],
     dest: Path | None,
+    strict: bool = False,
 ) -> None:
     fieldnames = ["model"] + list(ORDERED_DATASETS) + [
         "avg_input_tokens", "avg_output_tokens", "avg_total_tokens", "avg_cache_tokens", "total_cost_usd",
@@ -264,7 +301,7 @@ def write_csv(
         row: dict[str, str] = {"model": _trim_model(model)}
         for sd in ORDERED_DATASETS:
             if sd in records[model]:
-                r = _compute_row(model, sd, records[model][sd])
+                r = _compute_row(model, sd, records[model][sd], strict=strict)
                 row[sd] = f"{r['score']:.4f}"
             else:
                 row[sd] = ""
@@ -306,6 +343,9 @@ def main() -> None:
     parser.add_argument("--verbose", "-v", action="store_true", help="Print per-trial results")
     parser.add_argument("--output", "-o", type=Path, default=None,
                         help="Write CSV to file (default: print to stdout after table)")
+    parser.add_argument("--errors-as-incorrect", action="store_true",
+                        help="Count any trial with an exception, parse failure, or missing "
+                             "verifier stdout as incorrect (still recorded in the error columns).")
     args = parser.parse_args()
 
     if not args.job_dirs:
@@ -328,9 +368,9 @@ def main() -> None:
         print("No deonticbench results found.")
         return
 
-    print_table(records, usage_by_model)
+    print_table(records, usage_by_model, strict=args.errors_as_incorrect)
     print()
-    write_csv(records, usage_by_model, args.output)
+    write_csv(records, usage_by_model, args.output, strict=args.errors_as_incorrect)
 
 
 if __name__ == "__main__":
