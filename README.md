@@ -1,5 +1,13 @@
 # Deontic Agentic Reasoning
 
+<p align="center">
+  <img src="assets/deontic_main_plot.png" alt="Deontic Agentic Reasoning overview" width="820"/>
+</p>
+
+<p align="center">
+  <em>In DAR (right), the statute is placed as a file in the harness, and the model examines it on the fly using general-purpose tools.</em>
+</p>
+
 > Built on top of [Harbor](https://github.com/harbor-framework/harbor) (Stanford / Terminal-Bench)
 > and [meta-harness](https://github.com/stanford-iris-lab/meta-harness) (Stanford IRIS Lab).
 
