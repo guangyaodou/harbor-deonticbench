@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DAR — Deontic Reasoning with Agentic Harnesses</title>
+<meta name="description" content="Deontic Agentic Reasoning (DAR) places the statute as a file in an agentic harness and lets the model examine it on demand. Agentic harnesses push the frontier on deontic reasoning, but improvements are not uniform: frontier models gain while weaker models degrade." />
+
+<!-- Open Graph / social cards -->
+<meta property="og:title" content="DAR — Deontic Reasoning with Agentic Harnesses" />
+<meta property="og:description" content="Agentic harnesses push the frontier on deontic reasoning — but unevenly: frontier models gain while open-source models degrade and consume up to 4x more tokens." />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="assets/overview.png" />
+<meta property="og:url" content="https://guangyaodou.github.io/harbor-deonticbench/" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-soft: #f6f7f9;
+    --ink: #1a1d23;
+    --ink-soft: #525a66;
+    --line: #e6e8ec;
+    --brand: #2b50d6;
+    --brand-dark: #1d39a6;
+    --accent: #0e9f7a;
+    --max: 1040px;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--brand); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+  section { padding: 56px 0; border-top: 1px solid var(--line); }
+  section:first-of-type { border-top: none; }
+  h2 {
+    font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em;
+    margin: 0 0 20px; text-align: center;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    text-align: center;
+    padding: 72px 24px 48px;
+    background:
+      radial-gradient(1200px 480px at 50% -120px, rgba(43,80,214,0.10), transparent 70%),
+      var(--bg);
+  }
+  .hero h1 {
+    font-size: clamp(2.4rem, 6vw, 3.8rem);
+    font-weight: 800; letter-spacing: -0.035em;
+    margin: 0 0 6px;
+    background: linear-gradient(90deg, var(--brand-dark), var(--brand) 55%, var(--accent));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .tagline {
+    font-size: clamp(1.05rem, 2.4vw, 1.4rem);
+    color: var(--ink-soft); font-weight: 500; margin: 0 0 28px;
+  }
+  .authors {
+    max-width: 760px; margin: 0 auto 6px;
+    font-size: 1.05rem; color: var(--ink);
+  }
+  .authors a { color: var(--ink); border-bottom: 1px dashed var(--line); }
+  .affil { color: var(--ink-soft); font-size: 0.95rem; margin: 4px auto 0; max-width: 700px; }
+  .venue { color: var(--ink-soft); font-size: 0.95rem; margin-top: 10px; font-style: italic; }
+
+  .btn-row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 30px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 20px; border-radius: 999px;
+    background: var(--ink); color: #fff; font-weight: 600; font-size: 0.98rem;
+    border: 1px solid var(--ink); transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+  }
+  .btn:hover { text-decoration: none; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,0.14); }
+  .btn.alt { background: #fff; color: var(--ink); border-color: var(--line); }
+  .btn.alt:hover { border-color: var(--ink-soft); }
+  .btn svg { width: 18px; height: 18px; fill: currentColor; }
+  .btn-logo { width: 18px; height: 18px; display: block; object-fit: contain; }
+
+  /* ---------- Teaser ---------- */
+  .teaser { text-align: center; }
+  .teaser img {
+    width: 100%; max-width: 940px; height: auto;
+    border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: 0 10px 40px rgba(20,30,60,0.08);
+  }
+  .caption { color: var(--ink-soft); font-size: 0.92rem; max-width: 860px; margin: 16px auto 0; text-align: left; }
+
+  /* ---------- Abstract ---------- */
+  .abstract p { max-width: 820px; margin: 0 auto; font-size: 1.06rem; color: #2b313b; }
+
+  /* ---------- Highlights ---------- */
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .card {
+    background: var(--bg-soft); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 22px;
+  }
+  .card .num { font-size: 1.9rem; font-weight: 800; color: var(--brand); letter-spacing: -0.02em; }
+  .card h3 { margin: 6px 0 6px; font-size: 1.08rem; }
+  .card p { margin: 0; color: var(--ink-soft); font-size: 0.96rem; }
+
+  /* ---------- Table ---------- */
+  .table-wrap { overflow-x: auto; text-align: center; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.96rem; }
+  th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { background: var(--bg-soft); font-weight: 700; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody tr:hover { background: #fafbfc; }
+  .dom { font-weight: 700; }
+
+  /* ---------- Modes / paradigms ---------- */
+  .modes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; max-width: 820px; margin: 0 auto; }
+  .mode { border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+  .mode .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; background: rgba(43,80,214,0.10); color: var(--brand-dark); margin-bottom: 8px; }
+  .mode h3 { margin: 0 0 6px; font-size: 1.06rem; }
+  .mode p { margin: 0; color: var(--ink-soft); font-size: 0.95rem; }
+
+  /* ---------- Related paper ---------- */
+  .followup {
+    display: block; max-width: 820px; margin: 0 auto;
+    border: 1px solid var(--line); border-left: 4px solid var(--brand);
+    border-radius: var(--radius); padding: 24px 26px; background: var(--bg-soft);
+    color: inherit; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  }
+  .followup:hover {
+    text-decoration: none; transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(20,30,60,0.10); border-left-color: var(--brand-dark);
+  }
+  .fw-kicker {
+    display: inline-block; padding: 3px 11px; border-radius: 999px;
+    font-size: 0.74rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+    background: rgba(43,80,214,0.10); color: var(--brand-dark); margin-bottom: 12px;
+  }
+  .followup h3 { margin: 0 0 4px; font-size: 1.22rem; letter-spacing: -0.01em; }
+  .fw-authors { margin: 0 0 14px; color: var(--ink-soft); font-size: 0.98rem; }
+  .fw-abstract { margin: 0; font-size: 1.0rem; color: #2b313b; }
+  .fw-link {
+    display: inline-flex; align-items: center; gap: 7px; margin-top: 16px;
+    font-weight: 700; color: var(--brand);
+  }
+  .fw-link svg { width: 16px; height: 16px; fill: currentColor; }
+  .followup:hover .fw-link { color: var(--brand-dark); }
+
+  /* ---------- Figure block ---------- */
+  .figblock { max-width: 900px; margin: 0 auto; text-align: center; }
+  .figblock .legend-img { width: 70%; max-width: 560px; height: auto; margin: 0 auto 6px; display: block; }
+  .figgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 8px; }
+  .figblock .panel-label { font-weight: 700; font-size: 0.95rem; margin: 14px 0 6px; }
+  .figblock .panel {
+    width: 100%; height: auto; display: block;
+    border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: 0 6px 24px rgba(20,30,60,0.07);
+  }
+
+  /* ---------- Key findings ---------- */
+  .findings { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  .finding {
+    background: var(--bg-soft); border: 1px solid var(--line); border-left: 4px solid var(--brand);
+    border-radius: var(--radius); padding: 20px 22px;
+  }
+  .finding h3 { margin: 0 0 6px; font-size: 1.05rem; }
+  .finding p { margin: 0; color: var(--ink-soft); font-size: 0.96rem; }
+
+  /* ---------- Results table ---------- */
+  .results { font-size: 0.88rem; width: auto; margin: 0 auto; display: inline-table; }
+  .results th, .results td { padding: 7px 12px; border-bottom: 1px solid var(--line); }
+  .results thead th { text-align: center; background: var(--bg-soft); }
+  .results .grouphead th { font-size: 0.78rem; letter-spacing: 0.02em; color: var(--ink-soft); }
+  .results td.val { text-align: center; font-variant-numeric: tabular-nums; }
+  .results .model { font-weight: 700; white-space: nowrap; vertical-align: middle; border-right: 1px solid var(--line); text-align: left; }
+  .results .setting { color: var(--ink-soft); white-space: nowrap; text-align: left; }
+  .results tr.grp td, .results tr.grp th { border-top: 2px solid #d4d8de; }
+  .results strong { color: var(--brand-dark); }
+
+  /* ---------- BibTeX ---------- */
+  .bib {
+    position: relative; background: #0f1217; color: #e6e9ef;
+    border-radius: var(--radius); padding: 20px 22px; overflow-x: auto;
+    font-size: 0.9rem; line-height: 1.55;
+  }
+  .bib pre { margin: 0; white-space: pre; }
+  .copy-btn {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(255,255,255,0.10); color: #e6e9ef; border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 8px; padding: 6px 12px; font-size: 0.82rem; cursor: pointer; font-weight: 600;
+  }
+  .copy-btn:hover { background: rgba(255,255,255,0.18); }
+
+  footer { text-align: center; color: var(--ink-soft); font-size: 0.9rem; padding: 36px 24px 56px; border-top: 1px solid var(--line); }
+
+  @media (max-width: 760px) {
+    .cards, .findings, .modes, .figgrid { grid-template-columns: 1fr; }
+    section { padding: 44px 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="wrap">
+    <h1>DAR</h1>
+    <p class="tagline">Deontic Reasoning with Agentic Harnesses</p>
+
+    <p class="authors">
+      <a href="https://guangyaodou.github.io/" target="_blank" rel="noopener">Guangyao Dou</a><sup>1</sup>,
+      William Jurayj<sup>1</sup>,
+      Nils Holzenberger<sup>2</sup>,
+      <a href="https://www.cs.jhu.edu/~vandurme/" target="_blank" rel="noopener">Benjamin Van Durme</a><sup>1</sup>
+    </p>
+    <p class="affil"><sup>1</sup>Johns Hopkins University &nbsp;&middot;&nbsp; <sup>2</sup>T&eacute;l&eacute;com Paris, Institut Polytechnique de Paris</p>
+
+    <div class="btn-row">
+      <a class="btn" href="assets/dar_paper.pdf" target="_blank" rel="noopener">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm8 1.5V8h4.5L14 3.5zM8 12h8v1.6H8V12zm0 3.4h8V17H8v-1.6zm0-6.8h4v1.6H8V8.6z"/></svg>
+        Paper (PDF)
+      </a>
+      <a class="btn alt" href="https://github.com/guangyaodou/harbor-deonticbench" target="_blank" rel="noopener">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+        Code
+      </a>
+      <a class="btn alt" href="https://huggingface.co/datasets/gydou/DeonticBench" target="_blank" rel="noopener" title="DeonticBench data on Hugging Face">
+        <img class="btn-logo" src="assets/hf-logo.png" width="18" height="18" alt="Hugging Face logo" />
+        Hugging Face
+      </a>
+    </div>
+    <p class="affil" style="margin-top:14px;">Data is available on Hugging Face as part of <a href="https://guangyaodou.github.io/DeonticBench/" target="_blank" rel="noopener">DeonticBench</a>.</p>
+  </div>
+</header>
+
+<!-- ================= TEASER ================= -->
+<section class="teaser">
+  <div class="wrap">
+    <img src="assets/overview.png" alt="Direct reasoning versus Deontic Agentic Reasoning (DAR)." />
+    <p class="caption">
+      <strong>Figure 1.</strong> Direct reasoning vs. <strong>Deontic Agentic Reasoning (DAR)</strong>.
+      In direct reasoning (left), the full statute and case facts are placed in the prompt, and the model
+      produces an answer in a single pass. In DAR (right), the statute is placed as a file in the harness,
+      and the model examines it on the fly using general-purpose tools (<code>grep</code>, <code>sed</code>,
+      <code>cat</code>, Python).
+    </p>
+  </div>
+</section>
+
+<!-- ================= ABSTRACT ================= -->
+<section class="abstract">
+  <div class="wrap">
+    <h2>Abstract</h2>
+    <p>
+      Deontic reasoning is the task of answering questions by applying explicit rules and policies to
+      case-specific facts — for example, computing tax liability under a statute or determining the outcome
+      of an immigration appeal. A key technical challenge for LLM-based deontic reasoning is that the relevant
+      ruleset can be long and cross-referenced, so models may still fail to locate the rules needed for a
+      particular reasoning step. We introduce <strong>Deontic Agentic Reasoning (DAR)</strong>, an agentic
+      reasoning setup in which the model interacts with the statutes on demand. We evaluate DAR under multiple
+      harnesses on the hard subsets of <a href="https://guangyaodou.github.io/DeonticBench/" target="_blank" rel="noopener">DeonticBench</a>.
+      Across these settings, we find that agentic harnesses can push the frontier on deontic reasoning tasks,
+      but improvements are not uniform: weaker models often degrade on numerical tasks while consuming far more tokens.
+    </p>
+  </div>
+</section>
+
+<!-- ================= HIGHLIGHTS ================= -->
+<section>
+  <div class="wrap">
+    <h2>At a Glance</h2>
+    <div class="cards">
+      <div class="card">
+        <div class="num">9</div>
+        <h3>Models</h3>
+        <p>Frontier (GPT-5.1, GPT-5.2, Claude Sonnet 4.5) and open-source (Qwen3.5 family, Qwen3-Coder, Qwen3-235B, Kimi K2).</p>
+      </div>
+      <div class="card">
+        <div class="num">4</div>
+        <h3>Agentic harnesses</h3>
+        <p>Terminus-2 and Terminus-KIRA in the main study; Claude Code and Codex CLI in the appendix &mdash; all vs. direct solving.</p>
+      </div>
+      <div class="card">
+        <div class="num">15&ndash;30%</div>
+        <h3>Frontier gain</h3>
+        <p>Frontier models improve on SARA-Numeric under Terminus-KIRA, while weaker models drop 11&ndash;23% and burn up to 4&times; the tokens.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TWO PARADIGMS ================= -->
+<section>
+  <div class="wrap">
+    <h2>Two Reasoning Paradigms</h2>
+    <div class="modes">
+      <div class="mode">
+        <span class="pill">baseline</span>
+        <h3>Direct reasoning</h3>
+        <p>The model receives the full statute, the case facts, and the question in a single prompt and produces an answer in one pass &mdash; the configuration used in most prior deontic-reasoning evaluations.</p>
+      </div>
+      <div class="mode">
+        <span class="pill">ours</span>
+        <h3>Deontic Agentic Reasoning</h3>
+        <p>The statute is placed as a file (<code>statute.txt</code>) in a harness. The model receives only the case facts and question, then issues tool calls (<code>sed</code>, <code>grep</code>, <code>cat</code>, Python) to read targeted portions of the statute on demand, accumulating observations as it explores.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= KEY FINDINGS ================= -->
+<section>
+  <div class="wrap">
+    <h2>Key Findings</h2>
+    <div class="findings">
+      <div class="finding">
+        <h3>Frontier models gain from DAR</h3>
+        <p>Under Terminus-KIRA, GPT-5.2 climbs from <strong>30% &rarr; 60%</strong> on SARA-Numeric, Claude Sonnet&nbsp;4.5 from <strong>36% &rarr; 54%</strong>, and GPT-5.1 picks up another <strong>15 points</strong> while staying saturated near 0.86 on Airline. The harness turns latent statute-reading ability into delivered accuracy.</p>
+      </div>
+      <div class="finding">
+        <h3>Open-source models fail under the same harness</h3>
+        <p>The same scaffold hurts weaker models. On SARA-Numeric, <strong>Qwen3.5-35B drops 34% &rarr; 11%</strong> and Qwen3.5-122B 37% &rarr; 20%. On Airline, every open-source model collapses to near-zero once placed in Terminus-2 or KIRA.</p>
+      </div>
+      <div class="finding">
+        <h3>Token cost explodes for weaker models</h3>
+        <p>Under Terminus-2, Qwen3.5-122B averages <strong>401k tokens per trial</strong> and Qwen3-235B 303k &mdash; roughly <strong>4&times;</strong> what frontier models consume. Extra turns inflate already-shaky reasoning into longer, more confident wrong answers.</p>
+      </div>
+      <div class="finding">
+        <h3>Harnesses amplify capability, not judgment</h3>
+        <p>For capable models the harness enables self-directed retrieval and error recovery, as the <em>Mismanaged Geniuses Hypothesis</em> predicts. For weaker models it is a confidence amplifier: interactive access with tools, but not the judgment to use them well.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MAIN RESULTS (FIGURE) ================= -->
+<section>
+  <div class="wrap">
+    <h2>Harness Comparison</h2>
+    <div class="figblock">
+      <img class="legend-img" src="assets/hc_legend.png" alt="Legend: Direct Solving, Terminus-2, Terminus-KIRA." />
+      <div class="figgrid">
+        <div>
+          <div class="panel-label">SARA-Numeric (accuracy)</div>
+          <img class="panel" src="assets/hc_sara_numeric.png" alt="Harness comparison on SARA-Numeric." />
+        </div>
+        <div>
+          <div class="panel-label">Airline (accuracy)</div>
+          <img class="panel" src="assets/hc_airline.png" alt="Harness comparison on Airline." />
+        </div>
+        <div>
+          <div class="panel-label">SARA-Binary (macro-F1)</div>
+          <img class="panel" src="assets/hc_sara_binary.png" alt="Harness comparison on SARA-Binary." />
+        </div>
+        <div>
+          <div class="panel-label">USCIS-AAO (macro-F1)</div>
+          <img class="panel" src="assets/hc_uscis.png" alt="Harness comparison on USCIS-AAO." />
+        </div>
+      </div>
+    </div>
+    <p class="caption" style="text-align:center;">
+      <strong>Figure 2.</strong> Direct Solving vs. Terminus-2 vs. Terminus-KIRA across nine models on the four
+      hard DeonticBench tasks. Each task is allotted a 10-minute budget; trials that exceed the budget, fail to
+      parse, or raise harness runtime errors are counted as incorrect. Agentic harnesses lift frontier models
+      but degrade open-source models, most severely on the numerical tasks.
+    </p>
+  </div>
+</section>
+
+<!-- ================= TOKEN USAGE ================= -->
+<section>
+  <div class="wrap">
+    <h2>Token Usage</h2>
+    <div class="figblock">
+      <img class="legend-img" src="assets/token_legend.png" alt="Legend: Direct Solving, Terminus-2, Terminus-KIRA." />
+      <img class="panel" src="assets/token_usage.png" alt="Average tokens consumed per trial under Direct Solving, Terminus-2, and Terminus-KIRA." />
+    </div>
+    <p class="caption" style="text-align:center;">
+      <strong>Figure 3.</strong> Average tokens consumed per trial under Direct Solving, Terminus-2, and
+      Terminus-KIRA. Agentic harnesses append each action's output to the next iteration's input, so weaker
+      open-source models spend far more tokens &mdash; up to roughly 4&times; the frontier &mdash; without a
+      matching accuracy gain.
+    </p>
+  </div>
+</section>
+
+<!-- ================= DETAILED RESULTS TABLE ================= -->
+<section>
+  <div class="wrap">
+    <h2>Detailed Results</h2>
+    <div class="table-wrap">
+      <table class="results">
+        <thead>
+          <tr class="grouphead">
+            <th colspan="2"></th>
+            <th colspan="2">Accuracy</th>
+            <th colspan="2">Macro F1</th>
+          </tr>
+          <tr>
+            <th>Model</th><th>Harness</th>
+            <th>SARA-Num</th><th>Airline</th>
+            <th>SARA-Bin</th><th>USCIS-AAO</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="grp"><td class="model" rowspan="5">Qwen3-Coder-480B</td><td class="setting">direct</td><td class="val">0.249</td><td class="val">0.021</td><td class="val">0.591</td><td class="val">0.338</td></tr>
+          <tr><td class="setting">codex</td><td class="val">0.086</td><td class="val">0.000</td><td class="val">0.598</td><td class="val">0.427</td></tr>
+          <tr><td class="setting">terminus-2</td><td class="val">0.143</td><td class="val">0.000</td><td class="val">0.793</td><td class="val">0.408</td></tr>
+          <tr><td class="setting">terminus-kira</td><td class="val">0.143</td><td class="val">0.013</td><td class="val">0.766</td><td class="val">0.378</td></tr>
+          <tr><td class="setting">claude-code</td><td class="val"><strong>0.343</strong></td><td class="val"><strong>0.050</strong></td><td class="val"><strong>0.800</strong></td><td class="val"><strong>0.505</strong></td></tr>
+
+          <tr class="grp"><td class="model" rowspan="5">Qwen3.5-122B</td><td class="setting">direct</td><td class="val"><strong>0.370</strong></td><td class="val"><strong>0.150</strong></td><td class="val">0.753</td><td class="val"><strong>0.780</strong></td></tr>
+          <tr><td class="setting">codex</td><td class="val">0.229</td><td class="val">0.013</td><td class="val">0.799</td><td class="val">0.775</td></tr>
+          <tr><td class="setting">terminus-2</td><td class="val">0.200</td><td class="val">0.038</td><td class="val">0.800</td><td class="val">0.603</td></tr>
+          <tr><td class="setting">terminus-kira</td><td class="val">0.200</td><td class="val">0.050</td><td class="val"><strong>0.823</strong></td><td class="val">0.764</td></tr>
+          <tr><td class="setting">claude-code</td><td class="val">0.286</td><td class="val">0.113</td><td class="val">0.793</td><td class="val">0.730</td></tr>
+
+          <tr class="grp"><td class="model" rowspan="4">Qwen3.5-35B</td><td class="setting">direct</td><td class="val">0.340</td><td class="val"><strong>0.137</strong></td><td class="val">0.740</td><td class="val">0.477</td></tr>
+          <tr><td class="setting">terminus-2</td><td class="val">0.229</td><td class="val">0.013</td><td class="val"><strong>0.833</strong></td><td class="val">0.607</td></tr>
+          <tr><td class="setting">terminus-kira</td><td class="val">0.114</td><td class="val">0.013</td><td class="val">0.829</td><td class="val"><strong>0.718</strong></td></tr>
+          <tr><td class="setting">claude-code</td><td class="val"><strong>0.371</strong></td><td class="val">0.088</td><td class="val"><strong>0.833</strong></td><td class="val">0.603</td></tr>
+
+          <tr class="grp"><td class="model" rowspan="4">Qwen3.5-397B</td><td class="setting">direct</td><td class="val">0.528</td><td class="val"><strong>0.192</strong></td><td class="val">0.782</td><td class="val">0.727</td></tr>
+          <tr><td class="setting">terminus-2</td><td class="val">0.286</td><td class="val">0.013</td><td class="val">0.833</td><td class="val">0.708</td></tr>
+          <tr><td class="setting">terminus-kira</td><td class="val"><strong>0.771</strong></td><td class="val">0.000</td><td class="val"><strong>0.906</strong></td><td class="val"><strong>0.778</strong></td></tr>
+          <tr><td class="setting">claude-code</td><td class="val">0.514</td><td class="val">0.100</td><td class="val">0.889</td><td class="val">0.643</td></tr>
+
+          <tr class="grp"><td class="model" rowspan="4">Qwen3-235B</td><td class="setting">direct</td><td class="val"><strong>0.321</strong></td><td class="val"><strong>0.128</strong></td><td class="val">0.665</td><td class="val">0.531</td></tr>
+          <tr><td class="setting">codex</td><td class="val">0.114</td><td class="val">0.000</td><td class="val"><strong>0.721</strong></td><td class="val">0.509</td></tr>
+          <tr><td class="setting">terminus-2</td><td class="val">0.171</td><td class="val">0.013</td><td class="val">0.598</td><td class="val"><strong>0.689</strong></td></tr>
+          <tr><td class="setting">terminus-kira</td><td class="val">0.286</td><td class="val">0.038</td><td class="val">0.665</td><td class="val">0.668</td></tr>
+
+          <tr class="grp"><td class="model" rowspan="4">Kimi-K2</td><td class="setting">direct</td><td class="val">0.084</td><td class="val"><strong>0.090</strong></td><td class="val">0.684</td><td class="val">0.518</td></tr>
+          <tr><td class="setting">codex</td><td class="val">0.200</td><td class="val">0.000</td><td class="val">0.733</td><td class="val">0.553</td></tr>
+          <tr><td class="setting">terminus-2</td><td class="val">0.114</td><td class="val">0.000</td><td class="val">0.593</td><td class="val">0.533</td></tr>
+          <tr><td class="setting">terminus-kira</td><td class="val"><strong>0.229</strong></td><td class="val">0.050</td><td class="val"><strong>0.885</strong></td><td class="val"><strong>0.668</strong></td></tr>
+
+          <tr class="grp"><td class="model" rowspan="4">GPT-5.2</td><td class="setting">direct</td><td class="val">0.303</td><td class="val">0.025</td><td class="val"><strong>0.597</strong></td><td class="val">0.779</td></tr>
+          <tr><td class="setting">codex</td><td class="val">0.343</td><td class="val">0.000</td><td class="val">0.464</td><td class="val"><strong>0.819</strong></td></tr>
+          <tr><td class="setting">terminus-2</td><td class="val">0.514</td><td class="val">0.188</td><td class="val">0.531</td><td class="val">0.781</td></tr>
+          <tr><td class="setting">terminus-kira</td><td class="val"><strong>0.600</strong></td><td class="val"><strong>0.363</strong></td><td class="val">0.569</td><td class="val">0.713</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="caption" style="text-align:center;">
+      Codex CLI, Terminus-2, Terminus-KIRA, and Claude Code harnesses on DeonticBench (Appendix Table 1).
+      Accuracy columns report exact-match accuracy; Macro&nbsp;F1 columns report macro-averaged F1.
+      The best score per (model, metric) row group is <strong>bolded</strong>.
+    </p>
+  </div>
+</section>
+
+<!-- ================= RELATED PAPER ================= -->
+<section>
+  <div class="wrap">
+    <h2>Built on DeonticBench</h2>
+    <a class="followup" href="https://guangyaodou.github.io/DeonticBench/" target="_blank" rel="noopener">
+      <span class="fw-kicker">Benchmark</span>
+      <h3>DeonticBench: A Benchmark for Reasoning over Rules</h3>
+      <p class="fw-authors">Guangyao Dou, Luis Brena, Akhil Deo, William Jurayj, Jingyu Zhang, Nils Holzenberger, Benjamin Van Durme</p>
+      <p class="fw-abstract">
+        DAR is evaluated on the hard subsets of <strong>DeonticBench</strong>, a benchmark for deontic reasoning
+        over real-world legal and regulatory statutes &mdash; U.S. federal income tax (SARA), airline baggage
+        policies, state housing law, and USCIS immigration appeals &mdash; with verified reference Prolog programs
+        for every case.
+      </p>
+      <span class="fw-link">
+        <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm6 4v10h2V7h-2z"/></svg>
+        Visit the DeonticBench site
+      </span>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <p>
+    &copy; 2026 The DAR Authors &nbsp;&middot;&nbsp;
+    <a href="https://github.com/guangyaodou/harbor-deonticbench" target="_blank" rel="noopener">GitHub</a> &nbsp;&middot;&nbsp;
+    <a href="assets/dar_paper.pdf" target="_blank" rel="noopener">Paper (PDF)</a> &nbsp;&middot;&nbsp;
+    <a href="https://guangyaodou.github.io/DeonticBench/" target="_blank" rel="noopener">DeonticBench</a>
+  </p>
+  <p style="margin-top:8px; font-size:0.82rem;">
+    Page template &mdash; edit author links and affiliations in <code>index.html</code>.
+  </p>
+</footer>
+
+</body>
+</html>
