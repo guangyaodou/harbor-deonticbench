@@ -1,5 +1,7 @@
 # Deontic Agentic Reasoning
 
+📄 [Paper](https://arxiv.org/abs/2606.05009) | 🌐 [Project Website](https://guangyaodou.github.io/harbor-deonticbench/) | 🤗 [DeonticBench Dataset](https://huggingface.co/datasets/gydou/DeonticBench)
+
 <p align="center">
   <img src="assets/deontic_main_plot.png" alt="Deontic Agentic Reasoning overview" width="820"/>
 </p>
@@ -8,11 +10,25 @@
   <em>In DAR (right), the statute is placed as a file in the harness, and the model examines it on the fly using general-purpose tools.</em>
 </p>
 
+**Deontic reasoning** is the task of answering questions by applying explicit rules and policies
+to case-specific facts: computing tax liability under a statute, or determining the outcome of
+an immigration appeal. A key challenge for LLMs is that the relevant ruleset can be long and
+heavily cross-referenced, so a model reasoning over a fixed prompt may fail to locate the rules
+needed for a particular reasoning step.
 
-This fork adapts [Harbor](https://github.com/harbor-framework/harbor) and [meta-harness](https://github.com/stanford-iris-lab/meta-harness) to evaluate LLM agents on **[deontic reasoning](https://huggingface.co/datasets/gydou/DeonticBench)** tasks
-— questions where the model must reason about obligations, permissions, and prohibitions under
-a body of rules (statutes, regulations, terms of service). It packages four sub-domains as
-Harbor tasks and provides ready-to-run scripts for several agent + model combinations.
+**Deontic Agentic Reasoning (DAR)** reframes this as an *agentic* task: rather than packing the
+entire ruleset into the prompt, the statute is placed as a file in the agent's environment, and
+the model reads it on demand using general-purpose tools — reading, searching, and writing code
+as it reasons. Evaluated under multiple harnesses on hard subsets of
+[DeonticBench](https://guangyaodou.github.io/DeonticBench/), we find that agentic harnesses can
+push the frontier on deontic reasoning, though gains are not uniform: weaker models often degrade
+on numerical tasks while consuming far more tokens.
+
+This repository is the evaluation framework behind DAR. It adapts
+[Harbor](https://github.com/harbor-framework/harbor) and
+[meta-harness](https://github.com/stanford-iris-lab/meta-harness) to run LLM agents on
+DeonticBench, packaging its four sub-domains as Harbor tasks across three task framings and
+providing ready-to-run scripts for a range of agent + model combinations.
 
 ## What's in the benchmark
 
@@ -157,7 +173,7 @@ additionally writes an `overall_accuracy` column and splits `agent` / `model` in
 
 The Harbor tasks under `datasets/` are produced from the upstream DeonticBench source by adapters
 in `adapters/deonticbench_*`. See `deontic_adapters_scripts.txt` for the regeneration commands —
-you'll need a local checkout of [DeonticBench](https://arxiv.org/abs/2604.04443) and to set
+you'll need a local checkout of [DeonticBench](https://guangyaodou.github.io/DeonticBench/) and to set
 `DEONTICBENCH_ROOT` to its path.
 
 ## Repository layout
@@ -177,8 +193,8 @@ harbor-deonticbench/
 
 This project would not exist without:
 
-- **Harbor** — the agent evaluation framework. https://github.com/harbor-framework/harbor
-- **meta-harness** — the Kira agent baselines. https://github.com/stanford-iris-lab/meta-harness
-- **DeonticBench** — the underlying benchmark. [arxiv.org/abs/2604.04443](https://arxiv.org/abs/2604.04443)
+- **Harbor** — the agent evaluation framework. [github.com/harbor-framework/harbor](https://github.com/harbor-framework/harbor)
+- **meta-harness** — the Kira agent baselines. [github.com/stanford-iris-lab/meta-harness](https://github.com/stanford-iris-lab/meta-harness)
+- **DeonticBench** — the underlying benchmark. [guangyaodou.github.io/DeonticBench](https://guangyaodou.github.io/DeonticBench/) ([paper](https://arxiv.org/abs/2604.04443))
 
 If you use this fork, please also cite the upstream projects.
